@@ -24,7 +24,7 @@ export default function ResultsPanel({ result }) {
         <h2>Main period</h2>
         <p className="result-range">{fmtRange(main.startDate, main.endDate)}</p>
         <p className="result-total">{fmtInches(main.totalInches)}</p>
-        <StationBadge station={main.station} coverage={main.coverage} incomplete={main.incomplete} />
+        <StationBadge period={main} />
       </section>
 
       {comparison && comparison.type === 'priorYear' && (
@@ -39,11 +39,7 @@ export default function ResultsPanel({ result }) {
               <p className={`result-diff ${comparison.diffInches >= 0 ? 'positive' : 'negative'}`}>
                 {fmtDiff(comparison.diffInches)} vs. main period
               </p>
-              <StationBadge
-                station={comparison.station}
-                coverage={comparison.coverage}
-                incomplete={comparison.incomplete}
-              />
+              <StationBadge period={comparison} />
             </>
           )}
         </section>
@@ -74,7 +70,7 @@ export default function ResultsPanel({ result }) {
                 ) : (
                   <>
                     <p className="sub-period-total">{fmtInches(p.totalInches)}</p>
-                    <StationBadge station={p.station} coverage={p.coverage} incomplete={p.incomplete} />
+                    <StationBadge period={p} />
                   </>
                 )}
               </div>

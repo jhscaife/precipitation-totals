@@ -28,6 +28,8 @@ async function resolvePeriod(stationData, lat, lon, startDate, endDate) {
     totalInches: result.totalInches,
     coverage: Math.round(result.coverage * 1000) / 1000,
     incomplete: result.incomplete,
+    daysReported: result.daysReported,
+    totalDays: result.totalDays,
     station: {
       id: result.station.id,
       name: result.station.name,

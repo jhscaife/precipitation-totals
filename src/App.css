@@ -204,6 +204,11 @@ button[type='submit']:disabled {
   color: #ecb35c;
 }
 
+.station-note {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
 .sub-periods {
   display: flex;
   flex-direction: column;
