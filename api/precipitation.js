@@ -99,7 +99,7 @@ export default async function handler(req, res) {
       const resolved = await resolvePeriod(stationData, latNum, lonNum, period.startDate, period.endDate)
       comparisonResult = resolved.error
         ? { type: 'priorYear', error: resolved.error }
-        : { type: 'priorYear', ...resolved, diffInches: Math.round((main.totalInches - resolved.totalInches) * 100) / 100 }
+        : { type: 'priorYear', ...resolved, diffInches: Math.round((resolved.totalInches - main.totalInches) * 100) / 100 }
     } else if (comparisonType === 'avg3yr') {
       const periods = pastThreeYearsPeriods(startDate, endDate)
       const resolvedPeriods = []
@@ -117,7 +117,7 @@ export default async function handler(req, res) {
         periods: resolvedPeriods,
         yearsAveraged: usable.length,
         avgTotalInches,
-        diffInches: avgTotalInches === null ? null : Math.round((main.totalInches - avgTotalInches) * 100) / 100,
+        diffInches: avgTotalInches === null ? null : Math.round((avgTotalInches - main.totalInches) * 100) / 100,
       }
     }
 
