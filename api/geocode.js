@@ -57,6 +57,23 @@ async function fetchCensusResults(q) {
   }))
 }
 
+// Photon does fuzzy/typo-tolerant full-text matching, which on a short or
+// incomplete last word (e.g. "2205 mun") can return results that don't
+// actually share any text with the query — a global "best guess" rather
+// than a real candidate. Require the longest word in the query to actually
+// appear in the label so we only show plausible matches.
+function longestWord(q) {
+  const words = q.match(/[a-z]{3,}/gi) || []
+  return words.sort((a, b) => b.length - a.length)[0]
+}
+
+function filterRelevant(results, q) {
+  const word = longestWord(q)
+  if (!word) return results
+  const needle = word.toLowerCase()
+  return results.filter((r) => r.label.toLowerCase().includes(needle))
+}
+
 function dedupe(results) {
   const seen = new Set()
   const deduped = []
@@ -82,7 +99,7 @@ export default async function handler(req, res) {
   ])
 
   const censusResults = censusOutcome.status === 'fulfilled' ? censusOutcome.value : []
-  const photonResults = photonOutcome.status === 'fulfilled' ? photonOutcome.value : []
+  const photonResults = filterRelevant(photonOutcome.status === 'fulfilled' ? photonOutcome.value : [], q)
 
   if (censusOutcome.status === 'rejected' && photonOutcome.status === 'rejected') {
     res.status(502).json({ error: 'Both geocoders failed to respond.' })
