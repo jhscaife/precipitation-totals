@@ -4,7 +4,12 @@
 // PRCP observations, so several candidates may need to be tried.
 
 const DATA_SERVICE_URL = 'https://www.ncei.noaa.gov/access/services/data/v1'
-const NORMAL_DATATYPE = 'DLY-PRCP-NORMAL'
+// NOAA's daily normals product does NOT publish a plain per-day mean for
+// precipitation (only percentiles, since daily PRCP is too skewed/zero-heavy
+// for a mean to be meaningful) — but it does publish YTD-PRCP-NORMAL, the
+// cumulative climatological year-to-date normal through each day. Each day's
+// implied normal is derived from the day-over-day increase in that total.
+const CUMULATIVE_DATATYPE = 'YTD-PRCP-NORMAL'
 // Normals are climatological (year-agnostic, one value per day-of-year), but
 // the API still wants a concrete date range. A leap year is used so a Feb 29
 // normal comes back if the dataset publishes one; the year itself is
@@ -17,7 +22,7 @@ async function fetchDailyNormals(stationId) {
     stations: stationId,
     startDate: `${REF_YEAR}-01-01`,
     endDate: `${REF_YEAR}-12-31`,
-    dataTypes: NORMAL_DATATYPE,
+    dataTypes: CUMULATIVE_DATATYPE,
     format: 'json',
     units: 'standard',
   })
@@ -31,14 +36,22 @@ async function fetchDailyNormals(stationId) {
   const rows = JSON.parse(text)
   if (!Array.isArray(rows) || rows.length === 0) return null
 
-  const byMonthDay = new Map()
+  const entries = []
   for (const row of rows) {
-    const value = row[NORMAL_DATATYPE]
+    const value = row[CUMULATIVE_DATATYPE]
     if (value === undefined || value === null || value === '') continue
-    const inches = parseFloat(value)
-    if (Number.isNaN(inches)) continue
-    const monthDay = String(row.DATE).slice(-5) // "MM-DD" out of "YYYY-MM-DD"
-    byMonthDay.set(monthDay, inches)
+    const cumulative = parseFloat(value)
+    if (Number.isNaN(cumulative)) continue
+    entries.push({ monthDay: String(row.DATE).slice(-5), cumulative }) // "MM-DD" out of "MM-DD" or "YYYY-MM-DD"
+  }
+  if (entries.length === 0) return null
+  entries.sort((a, b) => (a.monthDay < b.monthDay ? -1 : a.monthDay > b.monthDay ? 1 : 0))
+
+  const byMonthDay = new Map()
+  let prevCumulative = 0
+  for (const { monthDay, cumulative } of entries) {
+    byMonthDay.set(monthDay, Math.max(0, cumulative - prevCumulative))
+    prevCumulative = cumulative
   }
   return byMonthDay.size > 0 ? byMonthDay : null
 }
