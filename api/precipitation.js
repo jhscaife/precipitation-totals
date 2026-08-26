@@ -1,5 +1,6 @@
 import { loadStationData, findCandidateStations } from './_lib/stations.js'
 import { findQualifyingStationResult } from './_lib/precipitation.js'
+import { findHistoricalNormal } from './_lib/normals.js'
 import { priorYearPeriod, pastThreeYearsPeriods, yearRange } from './_lib/dateRanges.js'
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/
@@ -71,6 +72,26 @@ export default async function handler(req, res) {
       return
     }
 
+    // Shown regardless of the comparison dropdown: NOAA's 1991-2020 Climate
+    // Normal for this same period, from the nearest station that publishes
+    // one (not every station does, so this can legitimately come back null).
+    let normal = null
+    const { startYear, endYear } = yearRange(startDate, endDate)
+    const normalCandidates = findCandidateStations({ ...stationData, lat: latNum, lon: lonNum, startYear, endYear })
+    const normalResult = await findHistoricalNormal(normalCandidates, startDate, endDate)
+    if (normalResult) {
+      normal = {
+        totalInches: normalResult.totalInches,
+        station: {
+          id: normalResult.station.id,
+          name: normalResult.station.name,
+          state: normalResult.station.state,
+          distanceMiles: Math.round(normalResult.station.distanceMiles * 10) / 10,
+        },
+        diffInches: Math.round((main.totalInches - normalResult.totalInches) * 100) / 100,
+      }
+    }
+
     let comparisonResult = null
 
     if (comparisonType === 'priorYear') {
@@ -102,6 +123,7 @@ export default async function handler(req, res) {
 
     res.status(200).json({
       main,
+      normal,
       comparison: comparisonResult,
     })
   } catch (err) {

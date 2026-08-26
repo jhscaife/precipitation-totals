@@ -16,7 +16,7 @@ function fmtRange(start, end) {
 }
 
 export default function ResultsPanel({ result }) {
-  const { main, comparison } = result
+  const { main, normal, comparison } = result
 
   return (
     <div className="results">
@@ -25,6 +25,21 @@ export default function ResultsPanel({ result }) {
         <p className="result-range">{fmtRange(main.startDate, main.endDate)}</p>
         <p className="result-total">{fmtInches(main.totalInches)}</p>
         <StationBadge period={main} />
+
+        {normal ? (
+          <div className="normal-block">
+            <p className={`result-diff ${normal.diffInches >= 0 ? 'positive' : 'negative'}`}>
+              {fmtDiff(normal.diffInches)} vs. 1991–2020 average ({fmtInches(normal.totalInches)})
+            </p>
+            {normal.station.id !== main.station.id && (
+              <p className="normal-source">
+                via {normal.station.name} ({normal.station.id}), {normal.station.distanceMiles} mi away
+              </p>
+            )}
+          </div>
+        ) : (
+          <p className="normal-unavailable">1991–2020 NOAA average not published for a nearby station.</p>
+        )}
       </section>
 
       {comparison && comparison.type === 'priorYear' && (

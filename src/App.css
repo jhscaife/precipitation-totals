@@ -317,6 +317,27 @@ button[type='submit']:disabled {
   color: var(--muted);
 }
 
+.normal-block {
+  margin-top: 0.6rem;
+}
+
+.normal-block .result-diff {
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+.normal-source {
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin: 0.15rem 0 0;
+}
+
+.normal-unavailable {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-top: 0.6rem;
+}
+
 .sub-periods {
   display: flex;
   flex-direction: column;
